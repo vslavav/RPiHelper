@@ -55,7 +55,6 @@ void IrReceiver_TimerFunc(void* p)
 
 void IrReceiver::TimerHelper()
 {
-
 	cout << "IrReceiver::TimerHelper count= " <<  _nDebugCnt << endl;
 
 	_nDebugCnt = 0;
