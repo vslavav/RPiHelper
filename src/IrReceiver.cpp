@@ -40,6 +40,7 @@ void IrReceiver::Init()
 
 	int nErr = wiringPiISR(_nIrReceiver_pin, INT_EDGE_FALLING, &ISR_Handler);
 
+	//set oneshot timer
 	_timer1.SetTimerType(TimerType::OneShot);
 	_timer1.SetInterval(200); // 100 msec
 	_timer1.SetCallBack(bind(IrReceiver_TimerFunc,(void*)this));
