@@ -15,6 +15,7 @@
 #include "USonicSensor.h"
 #include "ServoSg90Control.h"
 #include "IrReceiver.h"
+#include "IrReceiverLIRC.h"
 
 using namespace std;
 
@@ -58,6 +59,10 @@ void GpioMgr::Init()
 
 	_pIrReceiver = new IrReceiver();
 	_pIrReceiver->Init();
+
+	_pIrReceiverLIRC = new IrReceiverLIRC();
+	_pIrReceiverLIRC->Init();
+	_pIrReceiverLIRC->Start();
 
 
 //	thread t(ManageIO, this);

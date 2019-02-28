@@ -27,6 +27,7 @@ void TimerFunc(void* p);
 class USonicSensor;
 class ServoSg90Control;
 class IrReceiver;
+class IrReceiverLIRC;
 
 class GpioMgr {
 	condition_variable _cond_var;
@@ -48,6 +49,7 @@ class GpioMgr {
 	USonicSensor* _pUSonicSensor;
 	ServoSg90Control* _pServoSg90Control;
 	IrReceiver*       _pIrReceiver;
+	IrReceiverLIRC*   _pIrReceiverLIRC;
 
 
 public:
