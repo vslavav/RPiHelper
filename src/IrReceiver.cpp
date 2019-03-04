@@ -38,7 +38,8 @@ void IrReceiver::Init()
 
 	Init_IO();
 
-	int nErr = wiringPiISR(_nIrReceiver_pin, INT_EDGE_FALLING, &ISR_Handler);
+	wiringPiISR(_nIrReceiver_pin, INT_EDGE_BOTH, &ISR_Handler);
+	pinMode(_nIrReceiver_pin, INPUT);
 
 	//set oneshot timer
 	_timer1.SetTimerType(TimerType::OneShot);
@@ -56,9 +57,7 @@ void IrReceiver_TimerFunc(void* p)
 
 void IrReceiver::TimerHelper()
 {
-	cout << "IrReceiver::TimerHelper count= " <<  _nDebugCnt << endl;
 
-	_nDebugCnt = 0;
 }
 
 void IrReceiver::Init_IO()
@@ -68,32 +67,40 @@ void IrReceiver::Init_IO()
 
 void IrReceiver::Process_ISR_Handler()
 {
+	static bool isStart = false;
+	static bool isFirstPulseFound = false;
 
-	static bool isStart = true;
+	int nInputValue =  digitalRead(_nIrReceiver_pin);
+	cout << "Input pin value = " << nInputValue << endl;
 
-	if(_nDebugCnt == 0)
+	if(isFirstPulseFound == false)
 	{
-		cout << "Starting timer ..."  << endl;
-		_timer1.Start();
+		if(isStart == false)
+		{
+			if(nInputValue == 0)
+			{
+				_startTime = chrono::system_clock::now();
+				isStart = true;
+			}
+
+		}
+		else if(isStart == true)
+		{
+			if(nInputValue == 1)
+			{
+				_endTime = chrono::system_clock::now();
+				isFirstPulseFound = true;
+				chrono::duration<double, micro> delta_time_micro = chrono::duration<double, micro>(_endTime - _startTime);
+				cout << "pulse duration = " << delta_time_micro.count() <<endl;
+			}
+		}
 	}
 
-	_nDebugCnt++;
-	cout << "Ir Rec:counts=" << _nDebugCnt << endl;
 
 
-	if(isStart == true)
-	{
-		isStart = false;
-		_startTime = chrono::high_resolution_clock::now();
 
-	}
-	else
-	{
-		isStart = true;
-		_endTime = chrono::high_resolution_clock::now();
-		chrono::duration<double, micro> delta_time_micro = chrono::duration<double, micro>(_endTime - _startTime);
-		cout << "ir duration = " << delta_time_micro.count() <<endl;
-	}
+
+
 
 
 }

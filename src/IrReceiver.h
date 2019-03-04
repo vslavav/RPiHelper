@@ -13,9 +13,21 @@
 void ISR_Handler(void);
 void IrReceiver_TimerFunc(void* p);
 
+//https://techdocs.altium.com/display/FPGA/NEC+Infrared+Transmission+Protocol
+
 class IrReceiver {
+
+	enum RsvState
+	{
+		RS_None,
+		RS_9msPulse,
+		RS_4p5msPulse,
+		RS_Done
+	};
+
+
 	int _nIrReceiver_pin;
-	int _nDebugCnt;
+	RsvState _rsvState;
 
 	Timer _timer1;
 

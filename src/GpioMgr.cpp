@@ -60,9 +60,9 @@ void GpioMgr::Init()
 	_pIrReceiver = new IrReceiver();
 	_pIrReceiver->Init();
 
-	_pIrReceiverLIRC = new IrReceiverLIRC();
-	_pIrReceiverLIRC->Init();
-	_pIrReceiverLIRC->Start();
+	//_pIrReceiverLIRC = new IrReceiverLIRC();
+	//_pIrReceiverLIRC->Init();
+	//_pIrReceiverLIRC->Start();
 
 
 //	thread t(ManageIO, this);
@@ -122,12 +122,12 @@ void GpioMgr::InitPins()
 
 	//assign board pins
 	_PWM_MotorB_pin = 0;          /* GPIO0 as per WiringPi,GPIO17 as per BCM */
-	pinMode(_PWM_MotorB_pin, OUTPUT);	/* set GPIO as output */
+//	pinMode(_PWM_MotorB_pin, OUTPUT);	/* set GPIO as output */
 
 	_LogicControl1_MotorB_pin = 2;   /* GPIO2 as per WiringPi,GPIO27 as per BCM */
-	pinMode(_LogicControl1_MotorB_pin, OUTPUT);	/* set GPIO as output */
+//	pinMode(_LogicControl1_MotorB_pin, OUTPUT);	/* set GPIO as output */
 	_LogicControl2_MotorB_pin = 3;    /* GPIO3 as per WiringPi,GPIO22 as per BCM */
-	pinMode(_LogicControl2_MotorB_pin, OUTPUT);	/* set GPIO as output */
+//	pinMode(_LogicControl2_MotorB_pin, OUTPUT);	/* set GPIO as output */
 
 
 
