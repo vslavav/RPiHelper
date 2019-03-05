@@ -34,9 +34,11 @@ IrReceiver* IrReceiver::g_pIrReceiver = nullptr;
 void IrReceiver::Init()
 {
 	g_pIrReceiver = this;
-	_nDebugCnt = 0;
+	_rsvState = RS_None;
 
 	Init_IO();
+
+	_nBitsCount = 0;
 
 	wiringPiISR(_nIrReceiver_pin, INT_EDGE_BOTH, &ISR_Handler);
 	pinMode(_nIrReceiver_pin, INPUT);
@@ -67,42 +69,143 @@ void IrReceiver::Init_IO()
 
 void IrReceiver::Process_ISR_Handler()
 {
-	static bool isStart = false;
-	static bool isFirstPulseFound = false;
 
+
+	Process();
+
+}
+
+void IrReceiver::Process()
+{
 	int nInputValue =  digitalRead(_nIrReceiver_pin);
-	cout << "Input pin value = " << nInputValue << endl;
+	//cout << "Input pin value = " << nInputValue << endl;
 
-	if(isFirstPulseFound == false)
+	switch(_rsvState)
 	{
-		if(isStart == false)
+	case RS_None:
+		if(nInputValue == 0)
 		{
-			if(nInputValue == 0)
+			_startTime = chrono::system_clock::now();
+			_rsvState = RS_9msPulse;
+			_nBitsCount = 0;
+		}
+		break;
+	case RS_9msPulse:
+		if(nInputValue == 1)
+		{
+			_endTime = chrono::system_clock::now();
+			chrono::duration<double, micro> delta_time_micro = chrono::duration<double, micro>(_endTime - _startTime);
+			int duration_value = (int)delta_time_micro.count();
+			if(abs(duration_value - 9000) < 900)
 			{
+				cout << "9ms Start pulse found-> " << duration_value <<endl;
+				_rsvState = RS_4p5msPulse;
 				_startTime = chrono::system_clock::now();
-				isStart = true;
 			}
 
 		}
-		else if(isStart == true)
+
+		break;
+	case RS_4p5msPulse:
+		if(nInputValue == 0)
 		{
-			if(nInputValue == 1)
+			_endTime = chrono::system_clock::now();
+			chrono::duration<double, micro> delta_time_micro = chrono::duration<double, micro>(_endTime - _startTime);
+			int duration_value = (int)delta_time_micro.count();
+			if(abs(duration_value - 4500) < 450)
 			{
-				_endTime = chrono::system_clock::now();
-				isFirstPulseFound = true;
-				chrono::duration<double, micro> delta_time_micro = chrono::duration<double, micro>(_endTime - _startTime);
-				cout << "pulse duration = " << delta_time_micro.count() <<endl;
+				cout << "4.5ms Start pulse found-> " << duration_value <<endl;
+				_rsvState = RS_Address;
+				_nAddress = 0;
+				_startTime = chrono::system_clock::now();
 			}
 		}
+		break;
+
+	case RS_Address:
+	{
+		if(nInputValue == 0)
+		{
+			int nDataBit = ProcessDataBits();
+			_nBitsCount++;
+			if(_nBitsCount > 7)
+			{
+				_rsvState = RS_AddressInverse;
+				_nBitsCount = 0;
+				cout << "Getting Address Invert "  <<endl;
+			}
+
+		}
+
+		break;
 	}
 
+	case RS_AddressInverse:
+	{
+
+		if(nInputValue == 0)
+		{
+			int nDataBit = ProcessDataBits();
+			_nBitsCount++;
+			if(_nBitsCount > 7)
+			{
+				_rsvState = RS_AddressInverse;
+				_nBitsCount = 0;
+				cout << "Getting Address Invert "  <<endl;
+			}
 
 
+			_nBitsCount++;
+			if(_nBitsCount > 7)
+			{
+				_nBitsCount = 0;
+				_rsvState = RS_Done;
+			}
+		}
+		break;
+	}
 
+	case RS_Command:
+	{
+		break;
+	}
 
+	case RS_CommandInverse:
+	{
+		break;
+	}
 
+	case RS_Done:
+		break;
+	}
+}
 
+int  IrReceiver::ProcessDataBits()
+{
+	int nBitValue = 0;
+	_endTime = chrono::system_clock::now();
+	chrono::duration<double, micro> delta_time_micro = chrono::duration<double, micro>(_endTime - _startTime);
+	int duration_value = (int)delta_time_micro.count();
+	if(duration_value > 1800 && abs(duration_value - 2250) < 450)
+	{
+		cout << "Address 1 pulse found-> " << duration_value <<endl;
+		//_rsvState = RS_Address;
+		_startTime = chrono::system_clock::now();
+		nBitValue = 1;
+	}
+	else if(abs(duration_value - 1250) < 250)
+	{
+		cout << "Address 0 pulse found-> " << duration_value <<endl;
+		//_rsvState = RS_Address;
+		_startTime = chrono::system_clock::now();
+	}
+	else
+	{
+		_startTime = chrono::system_clock::now();
+		cout << "Address Unknown pulse found-> " << duration_value <<endl;
+	}
 
+	return nBitValue;
 }
 
 void IrReceiver::Start()

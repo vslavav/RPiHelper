@@ -22,12 +22,22 @@ class IrReceiver {
 		RS_None,
 		RS_9msPulse,
 		RS_4p5msPulse,
+		RS_Address,
+		RS_AddressInverse,
+		RS_Command,
+		RS_CommandInverse,
 		RS_Done
 	};
 
 
 	int _nIrReceiver_pin;
 	RsvState _rsvState;
+
+	int _nBitsCount;
+	int _nAddress;
+	int _nAddressInvert;
+	int _nCommand;
+	int _nCommandInvert;
 
 	Timer _timer1;
 
@@ -48,6 +58,8 @@ public:
 	void Stop();
 	void Run();
 	void Process_ISR_Handler();
+	void Process();
+	int  ProcessDataBits();
 	void TimerHelper();
 };
 
