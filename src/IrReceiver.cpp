@@ -39,6 +39,10 @@ void IrReceiver::Init()
 	Init_IO();
 
 	_nBitsCount = 0;
+	_ucAddress = 0;
+	_ucAddressInvert = 0;
+	_ucCommand = 0;
+	_ucCommandInvert = 0;
 
 	wiringPiISR(_nIrReceiver_pin, INT_EDGE_BOTH, &ISR_Handler);
 	pinMode(_nIrReceiver_pin, INPUT);
@@ -88,6 +92,10 @@ void IrReceiver::Process()
 			_startTime = chrono::system_clock::now();
 			_rsvState = RS_9msPulse;
 			_nBitsCount = 0;
+			_ucAddress = 0;
+			_ucAddressInvert = 0;
+			_ucCommand = 0;
+			_ucCommandInvert = 0;
 		}
 		break;
 	case RS_9msPulse:
@@ -101,6 +109,10 @@ void IrReceiver::Process()
 				cout << "9ms Start pulse found-> " << duration_value <<endl;
 				_rsvState = RS_4p5msPulse;
 				_startTime = chrono::system_clock::now();
+			}
+			else
+			{
+				_rsvState = RS_None;
 			}
 
 		}
@@ -116,8 +128,12 @@ void IrReceiver::Process()
 			{
 				cout << "4.5ms Start pulse found-> " << duration_value <<endl;
 				_rsvState = RS_Address;
-				_nAddress = 0;
+
 				_startTime = chrono::system_clock::now();
+			}
+			else
+			{
+				_rsvState = RS_None;
 			}
 		}
 		break;
@@ -127,12 +143,17 @@ void IrReceiver::Process()
 		if(nInputValue == 0)
 		{
 			int nDataBit = ProcessDataBits();
+			if(nDataBit == 1)
+			{
+				_ucAddress |= (1<<_nBitsCount);
+			}
 			_nBitsCount++;
 			if(_nBitsCount > 7)
 			{
-				_rsvState = RS_AddressInverse;
+
 				_nBitsCount = 0;
-				cout << "Getting Address Invert "  <<endl;
+				cout << "Address= " << static_cast<unsigned>(_ucAddress)  <<endl;
+				_rsvState = RS_AddressInverse;
 			}
 
 		}
@@ -146,36 +167,107 @@ void IrReceiver::Process()
 		if(nInputValue == 0)
 		{
 			int nDataBit = ProcessDataBits();
+			if(nDataBit == 1)
+			{
+				_ucAddressInvert |= (1<<_nBitsCount);
+			}
 			_nBitsCount++;
 			if(_nBitsCount > 7)
 			{
-				_rsvState = RS_AddressInverse;
+
 				_nBitsCount = 0;
-				cout << "Getting Address Invert "  <<endl;
+				cout << "AddressInvert= " << static_cast<unsigned>(_ucAddressInvert)  <<endl;
+				unsigned char temp = ~_ucAddressInvert;
+				if(_ucAddress != temp)
+				{
+					cout << "Address error" << endl;
+				}
+				_rsvState = RS_Command;
 			}
 
 
-			_nBitsCount++;
-			if(_nBitsCount > 7)
-			{
-				_nBitsCount = 0;
-				_rsvState = RS_Done;
-			}
+
 		}
 		break;
 	}
 
 	case RS_Command:
 	{
+		if(nInputValue == 0)
+		{
+			int nDataBit = ProcessDataBits();
+			if(nDataBit == 1)
+			{
+				_ucCommand |= (1<<_nBitsCount);
+			}
+			_nBitsCount++;
+			if(_nBitsCount > 7)
+			{
+
+				_nBitsCount = 0;
+				cout << "Command= " << static_cast<unsigned>(_ucCommand)  <<endl;
+
+				_rsvState = RS_CommandInverse;
+			}
+
+
+
+		}
 		break;
 	}
 
 	case RS_CommandInverse:
 	{
+		if(nInputValue == 0)
+		{
+			int nDataBit = ProcessDataBits();
+			if(nDataBit == 1)
+			{
+				_ucCommandInvert |= (1<<_nBitsCount);
+			}
+			_nBitsCount++;
+			if(_nBitsCount > 7)
+			{
+
+				_nBitsCount = 0;
+				cout << "Commandnvert= " << static_cast<unsigned>(_ucCommandInvert)  <<endl;
+				unsigned char temp = ~_ucCommandInvert;
+				if(_ucCommand != temp)
+				{
+					cout << "Command error" << endl;
+				}
+				_rsvState = RS_FinalPulse1;
+			}
+
+
+
+		}
+		break;
+	}
+
+	case RS_FinalPulse1:
+	{
+		if(nInputValue == 0)
+		{
+			_rsvState = RS_FinalPulse2;
+			cout << "FinalPuls Front "   <<endl;
+		}
+		break;
+	}
+
+	case RS_FinalPulse2:
+	{
+		if(nInputValue == 1)
+		{
+			cout << "FinalPuls End "   <<endl;
+			_rsvState = RS_None;
+		}
 		break;
 	}
 
 	case RS_Done:
+		cout << "Done ..." << endl;
+		_rsvState = RS_None;
 		break;
 	}
 }
@@ -188,21 +280,21 @@ int  IrReceiver::ProcessDataBits()
 	int duration_value = (int)delta_time_micro.count();
 	if(duration_value > 1800 && abs(duration_value - 2250) < 450)
 	{
-		cout << "Address 1 pulse found-> " << duration_value <<endl;
+		//cout << "Address 1 pulse found-> " << duration_value <<endl;
 		//_rsvState = RS_Address;
 		_startTime = chrono::system_clock::now();
 		nBitValue = 1;
 	}
 	else if(abs(duration_value - 1250) < 250)
 	{
-		cout << "Address 0 pulse found-> " << duration_value <<endl;
+		//cout << "Address 0 pulse found-> " << duration_value <<endl;
 		//_rsvState = RS_Address;
 		_startTime = chrono::system_clock::now();
 	}
 	else
 	{
 		_startTime = chrono::system_clock::now();
-		cout << "Address Unknown pulse found-> " << duration_value <<endl;
+		//cout << "Address Unknown pulse found-> " << duration_value <<endl;
 	}
 
 	return nBitValue;

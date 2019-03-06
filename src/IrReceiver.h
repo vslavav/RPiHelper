@@ -26,6 +26,8 @@ class IrReceiver {
 		RS_AddressInverse,
 		RS_Command,
 		RS_CommandInverse,
+		RS_FinalPulse1,
+		RS_FinalPulse2,
 		RS_Done
 	};
 
@@ -34,10 +36,10 @@ class IrReceiver {
 	RsvState _rsvState;
 
 	int _nBitsCount;
-	int _nAddress;
-	int _nAddressInvert;
-	int _nCommand;
-	int _nCommandInvert;
+	unsigned char _ucAddress;
+	unsigned char _ucAddressInvert;
+	unsigned char _ucCommand;
+	unsigned char _ucCommandInvert;
 
 	Timer _timer1;
 
