@@ -28,6 +28,7 @@ class USonicSensor;
 class ServoSg90Control;
 class IrReceiver;
 class IrReceiverLIRC;
+class OneWireTempSensor;
 
 class GpioMgr {
 	condition_variable _cond_var;
@@ -50,6 +51,7 @@ class GpioMgr {
 	ServoSg90Control* _pServoSg90Control;
 	IrReceiver*       _pIrReceiver;
 	IrReceiverLIRC*   _pIrReceiverLIRC;
+	OneWireTempSensor* _pOneWireTempSensor;
 
 
 public:

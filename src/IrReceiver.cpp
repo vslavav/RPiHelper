@@ -49,7 +49,7 @@ void IrReceiver::Init()
 
 	//set oneshot timer
 	_timer1.SetTimerType(TimerType::OneShot);
-	_timer1.SetInterval(200); // 100 msec
+	_timer1.SetInterval(100); // 100 msec
 	_timer1.SetCallBack(bind(IrReceiver_TimerFunc,(void*)this));
 
 
@@ -63,6 +63,11 @@ void IrReceiver_TimerFunc(void* p)
 
 void IrReceiver::TimerHelper()
 {
+	cout << "TimerHelper ... "   <<endl;
+	if(_rsvState == RS_CommandInverse || _rsvState == RS_FinalPulse1 || _rsvState == RS_FinalPulse2)
+	{
+		_rsvState = RS_None;
+	}
 
 }
 
@@ -112,6 +117,7 @@ void IrReceiver::Process()
 			}
 			else
 			{
+				cout << "Unknown Start pulse found-> " << duration_value <<endl;
 				_rsvState = RS_None;
 			}
 
@@ -237,6 +243,7 @@ void IrReceiver::Process()
 					cout << "Command error" << endl;
 				}
 				_rsvState = RS_FinalPulse1;
+				_timer1.Start();
 			}
 
 

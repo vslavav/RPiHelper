@@ -16,6 +16,7 @@
 #include "ServoSg90Control.h"
 #include "IrReceiver.h"
 #include "IrReceiverLIRC.h"
+#include "OneWireTempSensor.h"
 
 using namespace std;
 
@@ -63,6 +64,10 @@ void GpioMgr::Init()
 	//_pIrReceiverLIRC = new IrReceiverLIRC();
 	//_pIrReceiverLIRC->Init();
 	//_pIrReceiverLIRC->Start();
+
+	_pOneWireTempSensor = new OneWireTempSensor();
+	_pOneWireTempSensor->Init();
+	_pOneWireTempSensor->Start();
 
 
 //	thread t(ManageIO, this);

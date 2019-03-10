@@ -14,6 +14,7 @@ void ISR_Handler(void);
 void IrReceiver_TimerFunc(void* p);
 
 //https://techdocs.altium.com/display/FPGA/NEC+Infrared+Transmission+Protocol
+// sony sirc proto: https://www.sbprojects.net/knowledge/ir/sirc.php
 
 class IrReceiver {
 
